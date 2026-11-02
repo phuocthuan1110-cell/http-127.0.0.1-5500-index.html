@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống POS & Quản Lý Quán Cà Phê Chuyên Nghiệp</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; display: flex; height: 100vh; overflow: hidden; }
+
+        /* THANH ĐIỀU HƯỚNG BÊN TRÁI */
+        .sidebar { width: 220px; background-color: #4a2e18; color: white; display: flex; flex-direction: column; justify-content: space-between; }
+        .sidebar h2 { text-align: center; font-size: 17px; padding: 20px 10px; border-bottom: 1px solid #6f4e37; margin: 0; }
+        .sidebar-menu button { width: 100%; background: none; border: none; color: white; padding: 15px 20px; text-align: left; font-size: 15px; cursor: pointer; transition: 0.2s; }
+        .sidebar-menu button:hover, .sidebar-menu button.active { background-color: #6f4e37; border-left: 4px solid #d97706; }
+
+        /* KHUNG NỘI DUNG CHÍNH */
+        .main-container { flex-grow: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .tab-pane { display: none; height: 100%; padding: 20px; overflow-y: auto; }
+        .tab-pane.active { display: block; }
+
+        h2.title { color: #4a2e18; margin-top: 0; border-bottom: 2px solid #ddd; padding-bottom: 10px; }
+
+        /* --- GIAO DIỆN SƠ ĐỒ BÀN & POS GỌI MÓN --- */
+        .pos-layout { display: flex; gap: 20px; height: calc(100vh - 80px); }
+        .tables-area { flex: 1; overflow-y: auto; padding-right: 10px; }
+        .order-area { width: 380px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; padding: 20px; }
+
+        .grid-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .table-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; cursor: pointer; border-top: 4px solid #ccc; transition: 0.2s; }
+        .table-card:hover { transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .table-card.empty { border-top-color: #27ae60; }
+        .table-card.busy { border-top-color: #c0392b; background-color: #fff5f5; }
+        .table-card h3 { margin: 5px 0; font-size: 16px; }
+        .table-card p { font-size: 13px; color: #666; margin: 0; }
+
+        /* Danh sách món ăn trong POS */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 15px; }
+        .menu-item-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .menu-item-card:hover { border-color: #d97706; background-color: #fffbeb; }
+        .menu-item-card h4 { margin: 5px 0; font-size: 14px; color: #2d3748; }
+        .menu-item-card p { color: #d97706; font-size: 13px; font-weight: bold; margin: 0; }
+
+        /* Giỏ hàng / Hóa đơn tạm tính */
+        .cart-items { flex-grow: 1; overflow-y: auto; border-top: 1px solid #eee; border-bottom: 1px solid #eee; margin: 10px 0; padding: 10px 0; }
+        .cart-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 14px; }
+        .cart-total { font-size: 18px; font-weight: bold; color: #c0392b; display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .checkout-btn { background: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; width: 100%; }
+        .checkout-btn:hover { background: #219653; }
+
+        /* Bảng chung cho Kho và Menu */
+        table.data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        table.data-table th, table.data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        table.data-table th { background-color: #6f4e37; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- THANH MENU TRÁI -->
+    <div class="sidebar">
+        <div>
+            <h2>☕ CAFE MANAGER PRO</h2>
+            <div class="sidebar-menu">
+                <button class="menu-btn active" onclick="switchTab(event, 'pane-pos')">🪑 Sơ Đồ Bàn & POS</button>
+                <button class="menu-btn" onclick="switchTab(event, 'pane-menu')">📋 Quản Lý Menu</button>
+                <button class="menu-btn" onclick="switchTab(event, 'pane-inventory')">📦 Quản Lý Kho</button>
+                <button class="menu-btn" onclick="switchTab(event, 'pane-report')">📊 Báo Cáo Doanh Thu</button>
+            </div>
+        </div>
+        <div style="padding: 15px; text-align: center; font-size: 12px; border-top: 1px solid #6f4e37;">Phiên bản Đồ án Web</div>
+    </div>
+
+    <!-- KHUNG HIỂN THỊ CHÍNH -->
+    <div class="main-container">
+
+        <!-- MỤC 1: SƠ ĐỒ BÀN & GỌI MÓN (POS) -->
+        <div id="pane-pos" class="tab-pane active">
+            <h2 class="title" id="pos-title">Quản Lý Sơ Đồ Bàn & Gọi Món</h2>
+            <div class="pos-layout">
+                <!-- Cột trái: Danh sách sơ đồ bàn hoặc danh sách món khi chọn bàn -->
+                <div class="tables-area" id="pos-view-area">
+                    <p><b>Chọn một bàn dưới đây để bắt đầu gọi món:</b></p>
+                    <div id="table-grid-container" class="grid-tables"></div>
+                </div>
+
+                <!-- Cột phải: Hóa đơn / Giỏ hàng của bàn đang chọn -->
+                <div class="order-area">
+                     <h3 id="current-table-label" style="margin-top:0; color:#4a2e18;">Chưa chọn bàn</h3>
+                    <div id="menu-selection-box" style="display:none;">
+                        <p style="font-size:13px; margin:5px 0; color:#666;">Bấm vào món để thêm vào bàn:</p>
+                        <div id="mini-menu-grid" class="menu-grid"></div>
+                    </div>
+                    
+                    <div class="cart-items" id="cart-items-container">
+                        <p style="text-align:center; color:#999; margin-top:40px;">Vui lòng chọn bàn bên trái để xem giỏ hàng.</p>
+                    </div>
+
+                    <div id="cart-footer" style="display:none;">
+                        <div class="cart-total">
+                            <span>Tổng tiền:</span>
+                            <span id="total-price-text">0 VNĐ</span>
+                        </div>
+                        <button class="checkout-btn" onclick="checkoutTable()">Thanh Toán & Trống Bàn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MỤC 2: QUẢN LÝ MENU -->
+        <div id="pane-menu" class="tab-pane">
+            <h2 class="title">Quản Lý Thực Đơn (Menu)</h2>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Tên Món</th><th>Giá Tiền</th><th>Trạng thái</th></tr></thead>
+                <tbody id="admin-menu-container"></tbody>
+            </table>
+        </div>
+
+        <!-- MỤC 3: QUẢN LÝ KHO -->
+        <div id="pane-inventory" class="tab-pane">
+            <h2 class="title">Quản Lý Kho Nguyên Vật Liệu</h2>
+            <table class="data-table">
+                <thead><tr><th>Mã NL</th><th>Tên Nguyên Liệu</th><th>Tồn Kho</th><th>Đơn Vị</th></tr></thead>
+                <tbody id="admin-inventory-container"></tbody>
+            </table>
+        </div>
+
+        <!-- MỤC 4: BÁO CÁO -->
+        <div id="pane-report" class="tab-pane">
+            <h2 class="title">Báo Cáo Doanh Thu Tổng Quan</h2>
+            <div style="background: white; padding: 20px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <h3>Doanh thu ngày hôm nay: <span style="color: #e67e22;">2.850.000 VNĐ</span></h3>
+                <p>Tổng số bàn đã phục vụ: <b>14 lượt bàn</b></p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let tablesData = [];
+        let menuData = [];
+        let inventoryData = [];
+        let currentTableId = null;
+        // Lưu trữ giỏ hàng theo từng bàn: { tableId: [ {id, ten, gia, soLuong} ] }
+        let tableCarts = {};
+
+        // Chuyển tab menu dọc
+        function switchTab(evt, paneId) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(paneId).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+
+        // Tải toàn bộ dữ liệu từ JSON lên
+        function loadAllData() {
+            fetch('tables.json')
+                .then(res => res.json())
+                .then(data => {
+                    tablesData = data.tables;
+                    inventoryData = data.inventory;
+                    renderTables();
+                    renderInventory();
+                });
+
+            fetch('menu.json')
+                .then(res => res.json())
+                .then(data => {
+                    menuData = data;
+                    renderMenuAdmin();
+                });
+        }
+
+        // Vẽ sơ đồ bàn
+        function renderTables() {
+            let html = '';
+            tablesData.forEach(t => {
+                let statusClass = t.status === 'empty' ? 'empty' : 'busy';
+                let statusText = t.status === 'empty' ? 'Trống' : 'Đang có khách';
+                html += `
+                    <div class="table-card ${statusClass}" onclick="selectTable(${t.id})">
+                        <h3>${t.name}</h3>
+                        <p><b>${statusText}</b></p>
+                    </div>
+                `;
+            });
+            document.getElementById('table-grid-container').innerHTML = html;
+        }
+
+        // Khi bấm chọn một bàn để gọi món
+        funct

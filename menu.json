@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Espresso Phin Đậm Đà",
+    "category": "caphe-truyenthong",
+    "categoryName": "Cà phê truyền thống",
+    "price": 29000,
+    "rating": 4.9,
+    "desc": "Cà phê pha phin truyền thống chuẩn gu Việt, hậu vị đắng ngọt lưu đọng.",
+    "img": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    "id": 2,
+    "name": "Bạc Xỉu Sài Gòn",
+    "category": "caphe-truyenthong",
+    "categoryName": "Cà phê truyền thống",
+    "price": 35000,
+    "rating": 5.0,
+    "desc": "Sự kết hợp hoàn hảo giữa vị béo ngậy của sữa đặc và hương cà phê nồng nàn.",
+    "img": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    "id": 3,
+    "name": "Caramel Macchiato",
+    "category": "caphe-may",
+    "categoryName": "Cà phê pha máy",
+    "price": 49000,
+    "rating": 4.8,
+    "desc": "Espresso mượt mà hòa quyện cùng sữa tươi nóng và xốt Caramel thơm ngọt.",
+    "img": "https://images.unsplash.com/photo-1485808191679-5f86510681a2?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    "id": 4,
+    "name": "Trà Đào Cam Sả Mật Ong",
+    "category": "tra-macchiato",
+    "categoryName": "Trà & Macchiato",
+    "price": 42000,
+    "rating": 4.9,
+    "desc": "Thức uống giải nhiệt thanh mát với sả tươi, cam vàng và miếng đào giòn ngọt.",
+    "img": "https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=600&auto=format&fit=crop"
+  }
+]

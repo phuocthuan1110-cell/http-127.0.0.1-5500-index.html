@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aroma Coffee & Bistro - Hệ Thống ERP & POS Quản Lý Quán</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f7f2e8; color: #2d1c13; }
+
+        /* HEADER & NAVIGATION */
+        header { background-color: #2d1c13; color: #f7f2e8; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .logo { font-size: 20px; font-weight: bold; color: #d4af37; text-decoration: none; }
+        nav button { background: none; border: none; color: #f7f2e8; margin-left: 15px; font-size: 14px; cursor: pointer; padding: 6px 12px; border-radius: 4px; transition: 0.2s; }
+        nav button:hover, nav button.active { background: #b88d51; color: white; }
+
+        /* CONTAINER */
+        .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
+        .section { display: none; }
+        .section.active { display: block; }
+
+        h2.title { color: #4a2e18; font-size: 24px; margin-bottom: 20px; border-bottom: 2px solid #e0cca9; padding-bottom: 8px; }
+
+        /* DASHBOARD THỐNG KÊ DOANH THU */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #b88d51; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card h4 { margin: 0 0 10px 0; color: #666; font-size: 14px; }
+        .stat-card p { margin: 0; font-size: 22px; font-weight: bold; color: #2d1c13; }
+
+        /* BẢNG DỮ LIỆU CHUNG */
+        table.data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        table.data-table th, table.data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        table.data-table th { background-color: #6f4e37; color: white; }
+
+        /* POS & SƠ ĐỒ BÀN */
+        .pos-layout { display: flex; gap: 20px; }
+        .pos-left { flex: 1; }
+        .pos-right { width: 350px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); height: fit-content; }
+
+        /* SƠ ĐỒ BÀN */
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .table-box { background: white; padding: 15px; border-radius: 8px; text-align: center; border-top: 4px solid #ccc; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; }
+        .table-box:hover { transform: translateY(-2px); }
+        .table-box.empty { border-top-color: #27ae60; }
+        .table-box.booked { border-top-color: #c0392b; background-color: #fff5f5; }
+        
+        /* Khi bàn đang được chọn (đổi sang màu đỏ/cam nổi bật) */
+        .table-box.selected { 
+            border-top-color: #e67e22; 
+            background-color: #fef5e7; 
+            outline: 2px solid #e67e22; 
+        }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .menu-card { background: white; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #eee3d0; cursor: pointer; transition: 0.2s; }
+        .menu-card:hover { transform: translateY(-2px); border-color: #b88d51; }
+        .menu-card img { width: 100%; height: 110px; object-fit: cover; border-radius: 6px; }
+        .menu-card h5 { margin: 8px 0 4px 0; font-size: 14px; }
+        .menu-card p { margin: 0; color: #9d703e; font-weight: bold; font-size: 13px; }
+
+        /* GIỎ HÀNG */
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; border-bottom: 1px solid #f4f6f9; padding-bottom: 6px; }
+        .checkout-btn { background: #27ae60; color: white; border: none; width: 100%; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .checkout-btn:hover { background: #219653; }
+
+        footer { background-color: #2d1c13; color: #e0cca9; text-align: center; padding: 20px; margin-top: 40px; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER & MENU CHUYỂN TRANG -->
+    <header>
+        <a href="#" class="logo">☕ AROMA COFFEE & BISTRO (ERP)</a>
+        <nav>
+            <button class="active" onclick="switchSection('sec-pos', this)">🪑 Bán Hàng & Sơ Đồ Bàn</button>
+            <button onclick="switchSection('sec-inventory', this)">📦 Quản Lý Kho</button>
+            <button onclick="switchSection('sec-revenue', this)">📊 Quản Lý Doanh Thu</button>
+            <button onclick="switchSection('sec-menu-admin', this)">📋 Quản Lý Thực Đơn</button>
+        </nav>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. PHẦN BÁN HÀNG & SƠ ĐỒ BÀN (POS) -->
+        <div id="sec-pos" class="section active">
+            <h2 class="title">Hệ Thống Bán Hàng Trực Tiếp (POS)</h2>
+            <div class="pos-layout">
+                <div class="pos-left">
+                    <h3 style="margin-top:0; font-size:16px; color:#67452d;">Sơ Đồ Bàn (Bấm chọn bàn để phục vụ):</h3>
+                    <div id="table-container" class="table-grid"></div>
+
+                    <h3 style="margin-top:20px; font-size:16px; color:#67452d;">Danh Mục Món Ăn/Đồ Uống:</h3>
+                    <div id="pos-menu-container" class="menu-grid"></div>
+                </div>
+
+                <div class="pos-right">
+                    <h3 id="current-table-label" style="margin-top:0; font-size:16px; color:#2d1c13;">Hóa Đơn: Chưa chọn bàn</h3>
+                    <div id="cart-items-box" style="max-height: 250px; overflow-y: auto; margin-bottom: 15px;">
+                        <p style="color:#888; font-size:13px; text-align:center;">Vui lòng chọn bàn ở bên trái.</p>
+                    </div>
+                    <div style="border-top: 1px solid #eee; padding-top: 10px; font-size: 15px; font-weight: bold; display: flex; justify-content: space-between;">
+                        <span>Tổng cộng:</span>
+                        <span id="cart-total-price" style="color: #c0392b;">0 đ</span>
+                    </div>
+                    <button class="checkout-btn" onclick="checkoutOrder()">Thanh Toán & Trả Bàn</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PHẦN QUẢN LÝ KHO -->
+        <div id="sec-inventory" class="section">
+            <h2 class="title">Quản Lý Kho Nguyên Vật Liệu</h2>
+            <p style="font-size:13px; color:#666; margin-top:-10px; margin-bottom:15px;">Theo dõi số lượng tồn kho nguyên liệu phục vụ pha chế.</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã NL</th>
+                        <th>Tên Nguyên Liệu</th>
+                        <th>Tồn Kho</th>
+                        <th>Đơn Vị</th>
+                        <th>Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- 3. PHẦN QUẢN LÝ DOANH THU -->
+        <div id="sec-revenue" class="section">
+            <h2 class="title">Báo Cáo Doanh Thu & Tài Chính</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Tổng Doanh Thu Hôm Nay</h4>
+                    <p id="total-revenue-text" style="color: #27ae60;">0 đ</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Tổng Số Đơn Đã Phục Vụ</h4>
+                    <p id="total-orders-text">0 đơn</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Món Bán Chạy Nhất</h4>
+                    <p style="font-size: 18px; color: #b88d51;">Cà phê sữa đá</p>
+                </div>
+            </div>
+
+            <h3 style="font-size:16px; color:#4a2e18;">Lịch Sử Giao Dịch Hóa Đơn</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Mã Hóa Đơn</th>
+                        <th>Tên Bàn</th>
+                        <th>Thời Gian</th>
+                        <th>Tổng Tiền</th>
+                        <th>Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody id="revenue-table-body">
+                    <tr><td colspan="5" style="text-align:center; color:#888;">Chưa có giao dịch thanh toán trong ngày.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 4. PHẦN QUẢN LÝ THỰC ĐƠN (MENU) -->
+        <div id="sec-menu-admin" class="section">
+            <h2 class="title">Quản Lý Danh Sách Thực Đơn</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Tên Món</th>
+                        <th>Danh Mục</th>
+                        <th>Giá Bán</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-menu-table-body"></tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Aroma Coffee & Bistro. All rights reserved. Quản lý ERP & POS chuyên nghiệp.</p>
+    </footer>
+
+    <script>
+        // DỮ LIỆU HỆ THỐNG
+        let menuData = [
+            { id: 1, name: "Espresso Phin Đậm Đà", category: "Cà phê", price: 29000, img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=400&auto=format&fit=crop" },
+            { id: 2, name: "Bạc Xỉu Sài Gòn", category: "Cà phê", price: 35000, img: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=400&auto=format&fit=crop" },
+            { id: 3, name: "Caramel Macchiato", category: "Cà phê máy", price: 49000, img: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?q=80&w=400&auto=format&fit=crop" },
+            { id: 4, name: "Trà Đào Cam Sả", category: "Thức uống", price: 42000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=400&auto=format&fit=crop" },
+            { id: 5, name: "Bánh Croissant Bơ", category: "Bánh ngọt", price: 32000, img: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=400&auto=format&fit=crop" }
+        ];
+
+        let tableData = [
+            { id: 1, name: "Bàn 01 (Trong nhà)", status: "empty" },
+            { id: 2, name: "Bàn 02 (Ban công)", status: "empty" },
+            { id: 3, name: "Bàn 03 (Sân vườn)", status: "empty" },
+            { id: 4, name: "Bàn VIP 01", status: "empty" }
+        ];
+
+        let inventoryData = [
+            { code: "NL01", name: "Hạt cà phê Arabica", qty: 15, unit: "kg", min: 5 },
+            { code: "NL02", name: "Sữa đặc ông thọ", qty: 4, unit: "thùng", min: 3 },
+            { code: "NL03", name: "Sữa tươi không đường", qty: 12, unit: "lít", min: 10 },
+            { code: "NL04", name: "Trà đào hộp", qty: 2, unit: "thùng", min: 4 }
+        ];
+
+        let currentTableId = null;
+        let tableCarts = {}; 
+        let transactionHistory = []; 
+
+        // CHUYỂN TAB / SECTION QUẢN TRỊ
+        function switchSection(sectionId, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // RENDER GIAO DIỆN POS (ĐÃ FIX HIỆU ỨNG BÀN ĐANG CHỌN)
+        // RENDER GIAO DIỆN POS (ĐÃ CẬP NHẬT TRẠNG THÁI CHỌN ĐỔI SANG MÀU ĐỎ/CAM)
+        function renderTables() {
+            let container = document.getElementById('table-container');
+            container.innerHTML = tableData.map(t => {
+                let isSelected = (t.id === currentTableId);
+                
+                // Xác định class và chữ hiển thị dựa trên trạng thái
+                let boxClass = 'empty';
+                let statusText = '🟢 Trống';
+                let textColor = '#27ae60';
+
+                if (t.status === 'booked') {
+                    boxClass = 'booked';
+                    statusText = '🔴 Đã đặt';
+                    textColor = '#c0392b';
+                }
+
+                // Nếu bàn này đang được bấm chọn để gọi món
+                if (isSelected) {
+                    boxClass = 'selected booked';
+                    statusText = '🔥 Đang chọn';
+                    textColor = '#e67e22';
+                }
+
+                return `
+                    <div class="table-box ${boxClass}" onclick="selectTable(${t.id})">
+                        <h4>${t.name}</h4>
+                        <p style="color: ${textColor};">${statusText}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPosMenu() {
+            let container = document.getElementById('pos-menu-container');
+            container.innerHTML = menuData.map(m => `
+                <div class="menu-card" onclick="addToCart(${m.id})">
+                    <img src="${m.img}" alt="${m.name}">
+                    <h5>${m.name}</h5>
+                    <p>${m.price.toLocaleString()} đ</p>
+                </div>
+            `).join('');
+        }
+
+        // CHỌN BÀN GỌI MÓN (ĐÃ GỌI LẠI renderTables ĐỂ HIỂN THỊ VIỀN VÀNG)
+        function selectTable(id) {
+            currentTableId = id;
+            let table = tableData.find(t => t.id === id);
+            document.getElementById('current-table-label').innerText = `Hóa Đơn: ${table.name}`;
+            renderTables(); // Vẽ lại bàn để hiện viền vàng 'selected'
+            renderCartUI();
+        }
+
+        // THÊM MÓN VÀO GIỎ CỦA BÀN
+        function addToCart(menuId) {
+            if (!currentTableId) {
+                alert("Vui lòng bấm chọn một bàn ở bên trái trước khi gọi món!");
+                return;
+            }
+
+            let table = tableData.find(t => t.id === currentTableId);
+            table.status = 'booked';
+            renderTables();
+
+            if (!tableCarts[currentTableId]) {
+                tableCarts[currentTableId] = [];
+            }
+
+            let item = menuData.find(m => m.id === menuId);
+            let cart = tableCarts[currentTableId];
+            let existing = cart.find(c => c.id === menuId);
+
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+            }
+
+            renderCartUI();
+        }
+
+        // HIỂN THỊ GIỎ HÀNG
+        function renderCartUI() {
+            if (!currentTableId) return;
+            let cart = tableCarts[currentTableId] || [];
+            let container = document.getElementById('cart-items-box');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<p style="color:#888; font-size:13px; text-align:center;">Bàn này chưa gọi món nào.</p>`;
+                document.getElementById('cart-total-price').innerText = `0 đ`;
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = cart.map(i => {
+                let sub = i.price * i.qty;
+                total += sub;
+                return `
+                    <div class="cart-item">
+                        <span><b>${i.name}</b> (x${i.qty})</span>
+                        <span>${sub.toLocaleString()} đ</span>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cart-total-price').innerText = total.toLocaleString() + ' đ';
+        }
+
+        // THANH TOÁN ĐƠN HÀNG & CẬP NHẬT DOANH THU
+        function checkoutOrder() {
+            if (!currentTableId) {
+                alert("Chưa chọn bàn thanh toán!");
+                return;
+            }
+
+            let cart = tableCarts[currentTableId] || [];
+            if (cart.length === 0) {
+                alert("Bàn này chưa có món để thanh toán!");
+                return;
+            }
+
+            let table = tableData.find(t => t.id === currentTableId);
+            let totalAmount = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+
+            let now = new Date().toLocaleTimeString();
+            transactionHistory.unshift({
+                id: "HD" + Math.floor(1000 + Math.random() * 9000),
+                tableName: table.name,
+                time: now,
+                total: totalAmount
+            });
+
+            table.status = 'empty';
+            tableCarts[currentTableId] = [];
+
+            renderTables();
+            renderCartUI();
+            updateRevenueDashboard();
+
+            alert(`Thanh toán thành công cho ${table.name} với số tiền ${totalAmount.toLocaleString()} VNĐ!`);
+            currentTableId = null;
+            document.getElementById('current-table-label').innerText = `Hóa Đơn: Chưa chọn bàn`;
+            renderTables();
+        }
+
+        // CẬP NHẬT GIAO DIỆN KHO & DOANH THU (ADMIN)
+        function renderInventoryTable() {
+            let tbody = document.getElementById('inventory-table-body');
+            tbody.innerHTML = inventoryData.map(i => {
+                let isLow = i.qty <= i.min;
+                return `
+                    <tr>
+                        <td>${i.code}</td>
+                        <td><b>${i.name}</b></td>
+                        <td>${i.qty}</td>
+                        <td>${i.unit}</td>
+                        <td><span style="color: ${isLow ? '#c0392b' : '#27ae60'}; font-weight:bold;">${isLow ? '⚠️ Sắp hết hàng' : 'Ổn định'}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderAdminMenuTable() {
+            let tbody = document.getElementById('admin-menu-table-body');
+            tbody.innerHTML = menuData.map(m => `
+                <tr>
+                    <td>M0${m.id}</td>
+                    <td><b>${m.name}</b></td>
+                    <td>${m.category}</td>
+                    <td>${m.price.toLocaleString()} đ</td>
+                    <td><button style="padding:4px 8px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;" onclick="alert('Tính năng đang phát triển')">Xóa</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateRevenueDashboard() {
+            let totalRev = transactionHistory.reduce((sum, h) => sum + h.total, 0);
+            document.getElementById('total-revenue-text').innerText = totalRev.toLocaleString() + ' đ';
+            document.getElementById('total-orders-text').innerText = transactionHistory.length + ' đơn';
+
+            let tbody = document.getElementById('revenue-table-body');
+            if (transactionHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#888;">Chưa có giao dịch thanh toán trong ngày.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = transactionHistory.map(h => `
+                <tr>
+                    <td><b>${h.id}</b></td>
+                    <td>${h.tableName}</td>
+                    <td>${h.time}</td>
+                    <td style="color: #c0392b; font-weight:bold;">${h.total.toLocaleString()} đ</td>
+                    <td><span style="color:green; font-weight:bold;">Đã hoàn thành</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // KHỞI CHẠY HỆ THỐNG KHI MỞ TRANG
+        window.onload = function() {
+            renderTables();
+            renderPosMenu();
+            renderInventoryTable();
+            renderAdminMenuTable();
+        };
+    </script>
+</body>
+</html>

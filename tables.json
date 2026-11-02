@@ -1,0 +1,9 @@
+{
+  "tables": [
+    { "id": "T01", "zone": "indoor", "name": "Bàn 01", "seats": 2, "status": "available" },
+    { "id": "T02", "zone": "indoor", "name": "Bàn 02", "seats": 4, "status": "booked" },
+    { "id": "T03", "zone": "indoor", "name": "Bàn 03", "seats": 2, "status": "available" },
+    { "id": "T05", "zone": "balcony", "name": "Ban Công 01", "seats": 2, "status": "available" },
+    { "id": "T08", "zone": "garden", "name": "Sân Vườn 01", "seats": 4, "status": "available" }
+  ]
+}
